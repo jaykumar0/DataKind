@@ -1,1 +1,3 @@
-DataKind Project for Daksh India -  analysing data for Medak district.
+DataKind Projects 
+
+1. for Daksh India -  analysing data for Medak district  Year 2015.
