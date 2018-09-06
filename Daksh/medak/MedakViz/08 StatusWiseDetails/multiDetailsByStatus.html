@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+	<style>
+
+	.axis {
+	  font: 10px sans-serif;
+	}
+
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+
+	.bar text.value {
+  fill: red;
+}
+.textlabel{
+        font-family: Helvetica, Arial, sans-serif;
+        font-size:14px;
+        text-anchor: middle;
+    }
+	
+	</style>
+</head>
+
+<body>
+	
+<script src="../../lib/d3.js"></script>
+
+<script>
+
+var title = "Average Age(Days)"
+var margin = {top: 20, right: 20, bottom: 200, left: 40},
+    width = 300 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// Parse the date / time
+var	parseDate = d3.time.format("%Y-%m").parse;
+var format = d3.format(",.0f");
+
+var x = d3.scale.ordinal().rangeRoundBands([0, width], .05);
+
+var y = d3.scale.linear().range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+    
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .ticks(10);
+
+
+d3.csv("medakDetailsByStatus.csv", function(error, data) {
+
+    data.forEach(function(d) {
+        d.name = d.NewStatus;
+        d.AvgAgeinDays = +d.AvgAgeinDays;
+		d.TotalCases = +d.TotalCases;
+		d.AvgDaysToFirstHearing = +d.AvgDaysToFirstHearing;
+		d.AvgNumOfHrng = +d.AvgNumOfHrng;
+		d.AvgDaysBetweenHrng = +d.AvgDaysBetweenHrng;
+		
+
+    });
+
+var chart1 = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+	
+  x.domain(data.map(function(d) { return d.name; }));
+  y.domain([0, d3.max(data, function(d) { return d.AvgAgeinDays; })]);
+
+  chart1.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .selectAll("text");
+//      .style("text-anchor", "end")
+//      .attr("dx", "-.8em")
+//      .attr("dy", "-.55em")
+//      .attr("transform", "rotate(-65)" );
+
+  chart1.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Count");
+
+  chart1.selectAll("bar")
+      .data(data)
+    .enter().append("rect")
+      .style("fill", "steelblue")
+      .attr("x", function(d) { return x(d.name); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.AvgAgeinDays); })
+      .attr("height", function(d) { return height - y(d.AvgAgeinDays); });
+	  
+	chart1.selectAll("text.bar")
+      .data(data)
+	.enter().append("text")
+      //.attr("class", "bar")
+      .attr("text-anchor", "middle")
+      .attr("x", function(d) { return x(d.name) + x.rangeBand()/2; })
+      .attr("y", function(d) { return y(d.AvgAgeinDays) + 12; })
+      .text(function(d) { return d.AvgAgeinDays; })
+	  .attr("font-family", "sans-serif")
+	  .attr("font-size", "11px")
+	  .attr("fill", "black");
+		
+
+//adding a label at the top of the chart
+	chart1.append("g")
+      .attr("transform", "translate(" + (width/2) + ", 0)")
+      .append("text")
+      .text(title)
+      .style({"text-anchor":"middle", "font-family":"Arial", "font-size": "10px"}); //"font-weight":"100"});		
+
+// Second Chart
+var chart2 = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+	
+  x.domain(data.map(function(d) { return d.name; }));
+  y.domain([0, d3.max(data, function(d) { return d.AvgDaysToFirstHearing; })]);
+
+  chart2.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .selectAll("text");
+
+  chart2.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Count");
+
+  chart2.selectAll("bar")
+      .data(data)
+    .enter().append("rect")
+      .style("fill", "steelblue")
+      .attr("x", function(d) { return x(d.name); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.AvgDaysToFirstHearing); })
+      .attr("height", function(d) { return height - y(d.AvgDaysToFirstHearing); });
+	  
+	chart2.selectAll("text.bar")
+      .data(data)
+	.enter().append("text")
+      //.attr("class", "bar")
+      .attr("text-anchor", "middle")
+      .attr("x", function(d) { return x(d.name) + x.rangeBand()/2; })
+      .attr("y", function(d) { return y(d.AvgDaysToFirstHearing) + 12; })
+      .text(function(d) { return d.AvgDaysToFirstHearing; })
+	  .attr("font-family", "sans-serif")
+	  .attr("font-size", "11px")
+	  .attr("fill", "black");
+		
+
+//adding a label at the top of the chart
+	chart2.append("g")
+      .attr("transform", "translate(" + (width/2) + ", 0)")
+      .append("text")
+      .text("Avg Days To First Hearing")
+      .style({"text-anchor":"middle", "font-family":"Arial", "font-size": "10px"}); //"font-weight":"100"});		
+});
+
+
+	  
+d3.csv("medakDetailsByStatus2.csv", function(error, data) {
+
+    data.forEach(function(d) {
+        d.name = d.NewStatus;
+		d.AvgNumOfHrng = +d.AvgNumOfHrng;
+		d.AvgDaysBetweenHrng = +d.AvgDaysBetweenHrng;
+    });
+	
+// Third Chart
+var chart3 = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+	
+  x.domain(data.map(function(d) { return d.name; }));
+  y.domain([0, d3.max(data, function(d) { return d.AvgNumOfHrng; })]);
+
+  chart3.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .selectAll("text");
+
+  chart3.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Count");
+
+  chart3.selectAll("bar")
+      .data(data)
+    .enter().append("rect")
+      .style("fill", "steelblue")
+      .attr("x", function(d) { return x(d.name); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.AvgNumOfHrng); })
+      .attr("height", function(d) { return height - y(d.AvgNumOfHrng); });
+	  
+	chart3.selectAll("text.bar")
+      .data(data)
+	.enter().append("text")
+      //.attr("class", "bar")
+      .attr("text-anchor", "middle")
+      .attr("x", function(d) { return x(d.name) + x.rangeBand()/2; })
+      .attr("y", function(d) { return y(d.AvgNumOfHrng) + 12; })
+      .text(function(d) { return d.AvgNumOfHrng; })
+	  .attr("font-family", "sans-serif")
+	  .attr("font-size", "11px")
+	  .attr("fill", "black");
+		
+
+//adding a label at the top of the chart
+	chart3.append("g")
+      .attr("transform", "translate(" + (width/2) + ", 0)")
+      .append("text")
+      .text("Avg Num Of Hrng")
+      .style({"text-anchor":"middle", "font-family":"Arial", "font-size": "10px"}); //"font-weight":"100"});		
+
+// Fourth Chart
+var chart4 = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+	
+  x.domain(data.map(function(d) { return d.name; }));
+  y.domain([0, d3.max(data, function(d) { return d.AvgDaysBetweenHrng; })]);
+
+  chart4.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .selectAll("text");
+
+  chart4.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Count");
+
+  chart4.selectAll("bar")
+      .data(data)
+    .enter().append("rect")
+      .style("fill", "steelblue")
+      .attr("x", function(d) { return x(d.name); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d.AvgDaysBetweenHrng); })
+      .attr("height", function(d) { return height - y(d.AvgDaysBetweenHrng); });
+	  
+	chart4.selectAll("text.bar")
+      .data(data)
+	.enter().append("text")
+      //.attr("class", "bar")
+      .attr("text-anchor", "middle")
+      .attr("x", function(d) { return x(d.name) + x.rangeBand()/2; })
+      .attr("y", function(d) { return y(d.AvgDaysBetweenHrng) + 12; })
+      .text(function(d) { return d.AvgDaysBetweenHrng; })
+	  .attr("font-family", "sans-serif")
+	  .attr("font-size", "11px")
+	  .attr("fill", "black");
+		
+
+//adding a label at the top of the chart
+	chart4.append("g")
+      .attr("transform", "translate(" + (width/2) + ", 0)")
+      .append("text")
+      .text("Avg Days Between Hrng")
+      .style({"text-anchor":"middle", "font-family":"Arial", "font-size": "10px"}); //"font-weight":"100"});		
+	  
+});
+</script>
+
+</body>

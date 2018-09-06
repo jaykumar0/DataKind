@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.arc text {
+  font: 14px sans-serif;
+  text-anchor: middle;
+}
+
+.arc path {
+  stroke: #fff;
+}
+
+.tooltip{
+position: absolute;	
+  text-align: center;	
+  width: 100px;	
+  height: 28px;		
+  padding: 2px;	
+  font: 12px sans-serif;	
+  background: lightblue;	
+  border: 0px;					
+  border-radius: 8px;
+  color:black;
+  box-shadow: -3px 3px 15px #888888;
+  opacity:0;	
+
+}
+
+</style>
+<body>
+<script src="../../lib/d3.js"></script>
+<div id = "svgContent"></div>
+
+<script>
+
+var width = 960,
+    height = 500,
+    radius = Math.min(width, height) / 2;
+
+var color = d3.scale.ordinal()
+    //.range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+	//.range(["#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+	//.range(["#a05d56", "#d0743c", "#ff8c00"]);
+	//.range(["green", "orange", "red"]);
+	.range(["green", "yellow", "red"]);
+	//.range(["#98df8a", "#ff7f0e","#ff9896"]);
+
+var arc = d3.svg.arc()
+    .outerRadius(radius - 10)
+    .innerRadius(radius - 150) ; //radius); //100
+
+var pie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) { return d.NumCases; });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+div = d3.select("body")
+.append("div") 
+.attr("class", "tooltip");
+
+d3.csv("MedakStatusWiseTotAndPercent.csv", type, function(error, data) {
+  if (error) throw error;
+
+  var g = svg.selectAll(".arc")
+        .data(pie(data))
+        .enter()
+        .append("g")
+        .attr("class","arc")
+         .on("mousemove",function(d){
+        	var mouseVal = d3.mouse(this);
+        	div.style("display","none");
+        	div
+        	.html("Status:" + d.data.Status + "</br>" + "Cases:" + d.data.NumCases)
+			.style("left", (d3.event.pageX+12) + "px")
+            .style("top", (d3.event.pageY-10) + "px")
+            .style("opacity", 1)
+            .style("display","block");
+        })
+        .on("mouseout",function(){div.html(" ").style("display","none");})
+        .on("click",function(d){
+        	if(d3.select(this).attr("transform") == null){
+        	d3.select(this).attr("transform","translate(42,0)");
+        	}else{
+        		d3.select(this).attr("transform",null);
+        	}
+        });
+		
+  g.append("path")
+      .attr("d", arc)
+      .style("fill", function(d) { return color(d.data.Status); })
+	  .style("fill-opacity", 0.9);
+
+  g.append("text")
+      .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+      .attr("dy", ".35em")
+      .text(function(d) { return d.data.Status + "-" + d.data.Percentage + "%"; });
+//      .text(function(d) { return d.data.NumCases; });
+
+svg.append("text")
+   .attr("text-anchor", "middle")
+   .attr("font-family", "sans-serif")
+   .attr("font-size", "18px")
+   .attr("dy", ".35em")
+   .text("Total No of Case - 1511");
+   
+});
+
+function type(d) {
+  d.NumCases = +d.NumCases;
+  d.Percentage = +d.Percentage;
+  return d;
+}
+
+</script>

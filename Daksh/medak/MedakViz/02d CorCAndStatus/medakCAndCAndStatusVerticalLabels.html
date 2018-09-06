@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.toolTip {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    position: absolute;
+    display: none;
+    width: auto;
+    height: auto;
+    background: none repeat scroll 0 0 white;
+    border: 0 none;
+    border-radius: 8px 8px 8px 8px;
+    box-shadow: -3px 3px 15px #888888;
+    color: black;
+    font: 12px sans-serif;
+    padding: 5px;
+    text-align: center;
+}
+
+</style>
+<body>
+<script src="../../lib/d3.js"></script>
+<script>
+
+var xColumn = "Type";
+
+var format = d3.format(",.0f");
+
+var margin = {top: 20, right: 260, bottom: 130, left: 40},
+    width = 700 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+	
+var x0 = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1);
+
+var x1 = d3.scale.ordinal();
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.ordinal()
+    //.range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+	.range(["#98df8a", "#ff7f0e","#ff9896"]);
+
+var xAxis = d3.svg.axis()
+    .scale(x0)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .tickFormat(d3.format(".2s"));
+
+var divTooltip = d3.select("body").append("div").attr("class", "toolTip");
+	
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("medakCorCAndStatus.csv", function(error, data) {
+  if (error) throw error;
+
+  var yNames = d3.keys(data[0]).filter(function(key) { return key !== xColumn; });
+
+  data.forEach(function(d) {
+    d.yCols = yNames.map(function(name) { return {name: name, value: +d[name]}; });
+  });
+
+  x0.domain(data.map(function(d) { return d[xColumn]; }));
+  x1.domain(yNames).rangeRoundBands([0, x0.rangeBand()]);
+  y.domain([-20, d3.max(data, function(d) { return d3.max(d.yCols, function(d) { return d.value; }); })]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Cases");
+
+  var bar = svg.selectAll(".bar")
+      .data(data)
+    .enter().append("g")
+      .attr("class", "bar")
+      .attr("transform", function(d) { return "translate(" + x0(d[xColumn]) + ",0)"; });
+
+  bar.selectAll("rect")
+      .data(function(d) { return d.yCols; })
+    .enter().append("rect")
+      .attr("width", x1.rangeBand())
+      .attr("x", function(d) { return x1(d.name); })
+      .attr("y", function(d) { return y(d.value); })
+      .attr("height", function(d) { return height - y(d.value); })
+      .style("fill", function(d) { return color(d.name); });
+
+bar
+    .on("mousemove", function(d){
+        divTooltip.style("left", d3.event.pageX+10+"px");
+        divTooltip.style("top", d3.event.pageY-25+"px");
+        divTooltip.style("display", "inline-block");
+        var x = d3.event.pageX, y = d3.event.pageY
+        var elements = document.querySelectorAll(':hover');
+        l = elements.length
+        l = l-1
+        elementData = elements[l].__data__
+        divTooltip.html((d[xColumn])+"<br>"+elementData.name+"<br>"+elementData.value);
+    });
+bar
+    .on("mouseout", function(d){
+        divTooltip.style("display", "none");
+    });
+	
+	
+	  bar.selectAll("text")
+	   .data(function(d) { return d.yCols; })
+	.enter().append("text")
+		.attr("x", function(d) { return x1(d.name); })
+		.attr("y", function(d) { return y(d.value); })
+		.attr("dx", "2em")
+		.attr("dy", "1em")
+	.style("fill", "black")
+  //.attr("text-anchor", "middle")
+  //.attr("transform", "rotate(90)")
+  //.text(function(d, i) { return options.slice()[i]; });
+  //.text("ABC");
+  //.text(function(d) { if (y(d.value) > 0 ) {return y(d.value)} else {return ""}; });
+	.text(function(d) { return format(d.value) });
+  
+  var legend = svg.selectAll(".legend")
+      .data(yNames.slice().reverse())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+legend.append("rect")
+    .attr("x", width + 60)
+    .attr("width", + 18)
+    .attr("height", 18)
+    .style("fill", color);
+
+legend.append("text")
+    .attr("x", width + 50)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "end")
+    .text(function(d) { return d; });
+
+
+});
+
+</script>
